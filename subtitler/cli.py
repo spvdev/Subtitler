@@ -125,7 +125,7 @@ def main():
                               help="Beam size for decoding (1=greedy/low RAM, 5=accurate, default: 1)")
     p_transcribe.add_argument("--compute-type", default="auto",
                               choices=["auto", "int8", "float16", "float32"],
-                              help="Model precision (default: auto — float16 on Apple Silicon/CUDA, int8 otherwise)")
+                              help="Model precision (default: auto — float16 on CUDA, int8 on CPU)")
     p_transcribe.set_defaults(func=cmd_transcribe)
 
     # --- translate ---
@@ -161,7 +161,7 @@ def main():
                         help="Beam size for decoding (1=greedy/low RAM, 5=accurate, default: 1)")
     p_auto.add_argument("--compute-type", default="auto",
                         choices=["auto", "int8", "float16", "float32"],
-                        help="Model precision (default: auto — float16 on Apple Silicon/CUDA, int8 otherwise)")
+                        help="Model precision (default: auto — float16 on CUDA, int8 on CPU)")
     p_auto.add_argument("--output-original", default=None,
                         help="Path for original-language SRT")
     p_auto.add_argument("--output-translated", default=None,

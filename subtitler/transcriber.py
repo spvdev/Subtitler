@@ -14,9 +14,7 @@ def _default_compute_type(device):
     """Pick the best compute type for the current platform."""
     if device == "cuda":
         return "float16"
-    # Apple Silicon natively supports float16 and it's faster than int8
-    if platform.system() == "Darwin" and platform.machine() == "arm64":
-        return "float16"
+    # CTranslate2 CPU backend only supports int8 and float32
     return "int8"
 
 
