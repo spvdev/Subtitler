@@ -17,6 +17,7 @@ def cmd_transcribe(args):
         language=args.language,
         device=args.device,
         beam_size=args.beam_size,
+        compute_type=args.compute_type,
     )
 
     if not segments:
@@ -57,6 +58,7 @@ def cmd_auto(args):
         language=args.language,
         device=args.device,
         beam_size=args.beam_size,
+        compute_type=args.compute_type,
     )
 
     if not segments:
@@ -121,6 +123,9 @@ def main():
                               help="Compute device (default: auto)")
     p_transcribe.add_argument("--beam-size", type=int, default=1,
                               help="Beam size for decoding (1=greedy/low RAM, 5=accurate, default: 1)")
+    p_transcribe.add_argument("--compute-type", default="auto",
+                              choices=["auto", "int8", "float16", "float32"],
+                              help="Model precision (default: auto — float16 on Apple Silicon/CUDA, int8 otherwise)")
     p_transcribe.set_defaults(func=cmd_transcribe)
 
     # --- translate ---
@@ -154,6 +159,9 @@ def main():
                         help="Compute device (default: auto)")
     p_auto.add_argument("--beam-size", type=int, default=1,
                         help="Beam size for decoding (1=greedy/low RAM, 5=accurate, default: 1)")
+    p_auto.add_argument("--compute-type", default="auto",
+                        choices=["auto", "int8", "float16", "float32"],
+                        help="Model precision (default: auto — float16 on Apple Silicon/CUDA, int8 otherwise)")
     p_auto.add_argument("--output-original", default=None,
                         help="Path for original-language SRT")
     p_auto.add_argument("--output-translated", default=None,

@@ -1,6 +1,7 @@
 """Speech-to-text transcription using faster-whisper (runs locally)."""
 
 import os
+import platform
 from faster_whisper import WhisperModel
 
 
@@ -9,7 +10,26 @@ from faster_whisper import WhisperModel
 DEFAULT_MODEL_SIZE = "medium"
 
 
-def transcribe(video_path, model_size=DEFAULT_MODEL_SIZE, language=None, device="auto", beam_size=1):
+def _default_compute_type(device):
+    """Pick the best compute type for the current platform."""
+    if device == "cuda":
+        return "float16"
+    # Apple Silicon natively supports float16 and it's faster than int8
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        return "float16"
+    return "int8"
+
+
+def _default_cpu_threads():
+    """Use all performance cores on Apple Silicon, otherwise let CTranslate2 decide."""
+    if platform.system() == "Darwin" and platform.machine() == "arm64":
+        # Use all available cores; os.cpu_count() includes efficiency cores
+        # but CTranslate2 benefits from using them all
+        return os.cpu_count() or 0
+    return 0  # 0 = CTranslate2 default
+
+
+def transcribe(video_path, model_size=DEFAULT_MODEL_SIZE, language=None, device="auto", beam_size=1, compute_type=None):
     """Transcribe audio from a video/audio file using Whisper.
 
     Args:
@@ -18,6 +38,7 @@ def transcribe(video_path, model_size=DEFAULT_MODEL_SIZE, language=None, device=
         language: Source language code (e.g. 'en'). None = auto-detect.
         device: 'auto', 'cpu', or 'cuda'.
         beam_size: Beam size for decoding (1=greedy, lower=less RAM).
+        compute_type: Data type for inference (auto/int8/float16/float32).
 
     Returns:
         Tuple of (segments_list, detected_language) where segments_list is
@@ -26,12 +47,13 @@ def transcribe(video_path, model_size=DEFAULT_MODEL_SIZE, language=None, device=
     if not os.path.isfile(video_path):
         raise FileNotFoundError(f"Input file not found: {video_path}")
 
-    compute_type = "float16" if device == "cuda" else "int8"
-    if device == "auto":
-        compute_type = "int8"
+    if compute_type is None or compute_type == "auto":
+        compute_type = _default_compute_type(device)
 
-    print(f"Loading Whisper model '{model_size}' (device={device})...")
-    model = WhisperModel(model_size, device=device, compute_type=compute_type)
+    cpu_threads = _default_cpu_threads()
+
+    print(f"Loading Whisper model '{model_size}' (device={device}, compute={compute_type})...")
+    model = WhisperModel(model_size, device=device, compute_type=compute_type, cpu_threads=cpu_threads)
 
     print(f"Transcribing: {video_path}")
     segments_iter, info = model.transcribe(
