@@ -9,7 +9,7 @@ from faster_whisper import WhisperModel
 DEFAULT_MODEL_SIZE = "medium"
 
 
-def transcribe(video_path, model_size=DEFAULT_MODEL_SIZE, language=None, device="auto"):
+def transcribe(video_path, model_size=DEFAULT_MODEL_SIZE, language=None, device="auto", beam_size=1):
     """Transcribe audio from a video/audio file using Whisper.
 
     Args:
@@ -17,6 +17,7 @@ def transcribe(video_path, model_size=DEFAULT_MODEL_SIZE, language=None, device=
         model_size: Whisper model size (tiny/base/small/medium/large-v3).
         language: Source language code (e.g. 'en'). None = auto-detect.
         device: 'auto', 'cpu', or 'cuda'.
+        beam_size: Beam size for decoding (1=greedy, lower=less RAM).
 
     Returns:
         Tuple of (segments_list, detected_language) where segments_list is
@@ -36,7 +37,7 @@ def transcribe(video_path, model_size=DEFAULT_MODEL_SIZE, language=None, device=
     segments_iter, info = model.transcribe(
         video_path,
         language=language,
-        beam_size=5,
+        beam_size=beam_size,
         vad_filter=True,
     )
 
